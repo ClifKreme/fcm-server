@@ -10,8 +10,8 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// 🔥 Initialize Firebase Admin SDK
-const serviceAccount = require("./service-account.json");
+// 🔥 Initialize Firebase Admin SDK using Environment Variable
+const serviceAccount = JSON.parse(process.env.GOOGLE_CREDENTIALS);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
