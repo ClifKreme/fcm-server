@@ -1,26 +1,31 @@
-const admin = require('firebase-admin');
+const admin = require("firebase-admin");
 
-// Initialize Firebase Admin SDK with your service account credentials
+// Initialize Firebase Admin SDK with service account from environment variable
+const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
 admin.initializeApp({
-  credential: admin.credential.cert(require('./service-account.json')),
+  credential: admin.credential.cert(serviceAccount),
 });
 
 // Function to send push notifications
-function sendNotification(token, title, body) {
+function sendNotification(tokens, title, body) {
   const message = {
     notification: {
       title: title,
       body: body,
     },
-    token: token,  // Token of the user you want to send the notification to
+    tokens: Array.isArray(tokens) ? tokens : [tokens], // Ensure it's an array
   };
 
-  admin.messaging().send(message)
+  return admin
+    .messaging()
+    .sendEachForMulticast(message) // Use sendEachForMulticast for multiple tokens
     .then((response) => {
-      console.log('Notification sent successfully:', response);
+      console.log("✅ Notification sent successfully:", response);
+      return response;
     })
     .catch((error) => {
-      console.error('Error sending notification:', error);
+      console.error("❌ Error sending notification:", error);
+      throw error; // Allow the caller to handle the error
     });
 }
 
