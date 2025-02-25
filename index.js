@@ -4,19 +4,27 @@ const cors = require("cors");
 const admin = require("firebase-admin");
 const { getFirestore } = require("firebase-admin/firestore");
 const sendNotification = require("./firebase-messaging");
+require("dotenv").config(); // Load environment variables
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ Initialize Firebase Admin SDK
+// ✅ Initialize Firebase Admin SDK (Only Once)
 if (!admin.apps.length) {
   try {
+    const serviceAccount = process.env.FIREBASE_CONFIG
+      ? JSON.parse(process.env.FIREBASE_CONFIG)
+      : require("./serviceAccountKey.json"); // Use local file if env variable is missing
+
     admin.initializeApp({
-      credential: admin.credential.applicationDefault(),
+      credential: admin.credential.cert(serviceAccount),
     });
+
+    console.log("✅ Firebase Admin Initialized Successfully");
   } catch (error) {
     console.error("🔥 Firebase Initialization Error:", error.message);
+    process.exit(1); // Stop the server if Firebase fails
   }
 }
 
@@ -44,11 +52,7 @@ app.post("/sendMessage", async (req, res) => {
       return res.status(400).json({ error: "No rescuers available" });
     }
 
-    await sendNotification(
-      rescuerTokens,
-      "🚨 Emergency Alert",
-      `${fullName} needs assistance: ${message}`
-    );
+    await sendNotification(rescuerTokens, "🚨 Emergency Alert", `${fullName} needs assistance: ${message}`);
 
     res.status(200).json({ message: "Notification sent to rescuers" });
   } catch (error) {

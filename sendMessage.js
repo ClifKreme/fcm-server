@@ -1,11 +1,15 @@
-const sendNotification = require('./firebase-messaging');
+const sendNotification = require("./firebase-messaging");
 
-// Your rescuer's token
-const rescuerToken = process.argv[2];  // Token passed as command line argument
+const rescuerToken = process.argv[2]; // Token passed as command-line argument
+const messageTitle = process.argv[3] || "Urgent Help Needed!";
+const messageBody = process.argv[4] || "Help needed urgently in your area! Please respond ASAP!";
 
-// Message details
-const messageTitle = process.argv[3] || 'Urgent Help Needed!';  // Title from command line or default
-const messageBody = process.argv[4] || 'Help needed urgently in your area! Please respond ASAP!';  // Body from command line or default
+if (!rescuerToken) {
+  console.error("❌ Error: Rescuer token is required.");
+  process.exit(1);
+}
 
-// Call the sendNotification function
-sendNotification(rescuerToken, messageTitle, messageBody);
+// Send the notification
+sendNotification(rescuerToken, messageTitle, messageBody)
+  .then(() => console.log("✅ Notification sent successfully!"))
+  .catch((error) => console.error("❌ Error sending notification:", error.message));
